@@ -14,6 +14,9 @@ class CSP:
         # the variable pair (i, j)
         self.constraints = {}
 
+        # Variables needed for assignment
+        self.backtrack_called = self.backtrack_failed = 0
+
     def add_variable(self, name, domain):
         """Add a new variable to the CSP. 'name' is the variable name
         and 'domain' is a list of the legal values for the variable.
@@ -108,6 +111,7 @@ class CSP:
         assignments and inferences that took place in previous
         iterations of the loop.
         """
+        self.backtrack_called += 1
 
         if self.assignment_is_done(assignment):
             return assignment
@@ -135,6 +139,7 @@ class CSP:
 
         # If we are here, then there are no legal values for unassigned_variable. This means that the
         # current iteration has no solution, at which point we return false
+        self.backtrack_failed += 1
         return False
 
         
