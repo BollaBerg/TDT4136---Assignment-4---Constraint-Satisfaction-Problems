@@ -275,8 +275,18 @@ def print_sudoku_solution(solution):
 
 
 if __name__ == "__main__":
-    csp = create_sudoku_csp("easy.txt")
+    for task in ["easy", "medium", "hard", "veryhard"]:
+        print(F"====== {task.upper():^7} ======")
+        csp = create_sudoku_csp(F"{task}.txt")
+        print_sudoku_solution(csp.backtracking_search())
+        print()
+        if csp.backtrack_called == 1:
+            print(F"Backtrack called 1 time.")
+        else:
+            print(F"Backtrack called {csp.backtrack_called} times.")
 
-    solution = csp.backtracking_search()
-
-    print_sudoku_solution(solution)
+        if csp.backtrack_failed == 1:
+            print(F"Backtrack failed 1 time.")
+        else:
+            print(F"Backtrack failed {csp.backtrack_failed} times.")
+        print()
