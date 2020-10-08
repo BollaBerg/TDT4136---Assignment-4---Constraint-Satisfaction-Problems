@@ -114,13 +114,41 @@ class CSP:
 
         unassigned_variable = self.select_unassigned_variable(assignment)
 
+        for value in self.order_domain_values(unassigned_variable, assignment):
+            assignment_copy = copy.deepcopy(assignment)
 
-        raise NotImplementedError
+            # As value is from the domain of unassigned_variable, the value
+            # is by definition consistent with assignment.
+            # We therefore skip "if value is consistent with assignment" from the book
+
+            # Set value to be the only legal option for unassigned_variable
+            assignment_copy[unassigned_variable] = [value]
+            
+            # if self.interference, then there has been no inconsistency found (meaning the value
+            # is legal for the current assignment_copy):
+            if self.inference(assignment_copy, self.get_all_neighboring_arcs(unassigned_variable)):
+                # Run this function recursively on assignment_copy:
+                result = self.backtrack(assignment_copy)
+                # If result, then there has been found a legal solution. Return it!
+                if result:
+                    return result
+
+        # If we are here, then there are no legal values for unassigned_variable. This means that the
+        # current iteration has no solution, at which point we return false
+        return False
+
+        
+    def order_domain_values(self, var, assignment):
+        """Order domain values connected to var.
+        
+        Can be implemented with a least-constraining-value heuristic, but
+        it currently only returns assignment[var]"""
+        return assignment[var]
 
     def assignment_is_done(self, assignment):
             """Checks if assignment is done"""
-            for _, possibilities in assignment.items():
-                if type(possibilities) != list or len(possibilities) > 1:
+            for possibilities in assignment.values():
+                if len(possibilities) > 1:
                      return False
             return True
 
@@ -130,7 +158,14 @@ class CSP:
         in 'assignment' that have not yet been decided, i.e. whose list
         of legal values has a length greater than one.
         """
-        raise NotImplementedError
+        # Filter out all elements where the domain is 1 (where there is only one legal value)
+        undecided_variables = filter(lambda item: len(item[1]) > 1, assignment.items())
+
+        # Return the name of the  element with the smalles domain, using minimum-remaining-values heuristic.
+        # While this is not technically needed, it usually performs better than random ordering, sometimes
+        # by a factor of 1000 or more (Russel & Norvig, 2016)
+        return min(undecided_variables, key=lambda item: len(item[1]))[0]
+        
 
     def inference(self, assignment, queue):
         """The function 'AC-3' from the pseudocode in the textbook.
@@ -139,14 +174,14 @@ class CSP:
         is the initial queue of arcs that should be visited.
         """
         while len(queue) > 0:
-            pair = queue.pop(0) # pair is a tuple. Example: ('0-0', '0-1')
+            (xi, xj) = queue.pop(0) # pair is a tuple. Example: ('0-0', '0-1')
 
-            if self.revise(assignment, pair[0], pair[1]):
-                # If this is true, then the domain of pair[0] has been revised
-                if len(self.domains[pair[0]]) == 0:
-                    # if self.domains[pair[0]] is empty, then the CSP has no solution
+            if self.revise(assignment, xi, xj):
+                # If this is true, then the domain of xi has been revised
+                if len(assignment[xi]) == 0:
+                    # if self.domains[xi] is empty, then the CSP has no solution
                     return False
-                for neighbor_tuple in self.get_all_neighboring_arcs(pair[0]):
+                for neighbor_tuple in self.get_all_neighboring_arcs(xi):
                     queue.append(neighbor_tuple)
         return True
 
@@ -162,9 +197,11 @@ class CSP:
         """
         revised = False
 
-        for x in self.domains[i]:
-            if x not in [pair[0] for pair in self.constraints[i][j]]:
-                self.domains[i].remove(x)
+        for x in assignment[i]:
+            # If no values in domain of j (= assignment[j]) allows x to satisfy constraints
+            # between i and j
+            if not any(((x, y) in self.constraints[i][j] for y in assignment[j])):
+                assignment[i].remove(x)
                 revised = True
                 
         return revised
@@ -224,9 +261,9 @@ def print_sudoku_solution(solution):
     """
     for row in range(9):
         for col in range(9):
-            print(solution['%d-%d' % (row, col)][0]),
+            print(solution['%d-%d' % (row, col)][0], end=' '),
             if col == 2 or col == 5:
-                print('|'),
+                print('|', end=' '),
         print("")
         if row == 2 or row == 5:
             print('------+-------+------')
@@ -235,4 +272,6 @@ def print_sudoku_solution(solution):
 if __name__ == "__main__":
     csp = create_sudoku_csp("easy.txt")
 
-    csp.backtracking_search()
+    solution = csp.backtracking_search()
+
+    print_sudoku_solution(solution)
