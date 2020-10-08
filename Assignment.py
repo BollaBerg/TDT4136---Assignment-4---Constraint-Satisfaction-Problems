@@ -108,8 +108,21 @@ class CSP:
         assignments and inferences that took place in previous
         iterations of the loop.
         """
-        # TODO: IMPLEMENT THIS
-        pass
+
+        if self.assignment_is_done(assignment):
+            return assignment
+
+        unassigned_variable = self.select_unassigned_variable(assignment)
+
+
+        raise NotImplementedError
+
+    def assignment_is_done(self, assignment):
+            """Checks if assignment is done"""
+            for _, possibilities in assignment.items():
+                if type(possibilities) != list or len(possibilities) > 1:
+                     return False
+            return True
 
     def select_unassigned_variable(self, assignment):
         """The function 'Select-Unassigned-Variable' from the pseudocode
@@ -117,8 +130,7 @@ class CSP:
         in 'assignment' that have not yet been decided, i.e. whose list
         of legal values has a length greater than one.
         """
-        # TODO: IMPLEMENT THIS
-        pass
+        raise NotImplementedError
 
     def inference(self, assignment, queue):
         """The function 'AC-3' from the pseudocode in the textbook.
@@ -126,8 +138,18 @@ class CSP:
         the lists of legal values for each undecided variable. 'queue'
         is the initial queue of arcs that should be visited.
         """
-        # TODO: IMPLEMENT THIS
-        pass
+        while len(queue) > 0:
+            pair = queue.pop(0) # pair is a tuple. Example: ('0-0', '0-1')
+
+            if self.revise(assignment, pair[0], pair[1]):
+                # If this is true, then the domain of pair[0] has been revised
+                if len(self.domains[pair[0]]) == 0:
+                    # if self.domains[pair[0]] is empty, then the CSP has no solution
+                    return False
+                for neighbor_tuple in self.get_all_neighboring_arcs(pair[0]):
+                    queue.append(neighbor_tuple)
+        return True
+
 
     def revise(self, assignment, i, j):
         """The function 'Revise' from the pseudocode in the textbook.
@@ -138,8 +160,14 @@ class CSP:
         between i and j, the value should be deleted from i's list of
         legal values in 'assignment'.
         """
-        # TODO: IMPLEMENT THIS
-        pass
+        revised = False
+
+        for x in self.domains[i]:
+            if x not in [pair[0] for pair in self.constraints[i][j]]:
+                self.domains[i].remove(x)
+                revised = True
+                
+        return revised
 
 
 def create_map_coloring_csp():
@@ -202,3 +230,9 @@ def print_sudoku_solution(solution):
         print("")
         if row == 2 or row == 5:
             print('------+-------+------')
+
+
+if __name__ == "__main__":
+    csp = create_sudoku_csp("easy.txt")
+
+    csp.backtracking_search()
