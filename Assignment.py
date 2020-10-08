@@ -283,8 +283,10 @@ if __name__ == "__main__":
         csp = create_sudoku_csp(F"{task}.txt")
 
         tic = time.perf_counter()
-        print_sudoku_solution(csp.backtracking_search())
+        solution = csp.backtracking_search()
         toc = time.perf_counter()
+
+        print_sudoku_solution(solution)
 
         print()
 
@@ -297,6 +299,6 @@ if __name__ == "__main__":
             print(F"Backtrack failed 1 time.")
         else:
             print(F"Backtrack failed {csp.backtrack_failed} times.")
-            
+
         print(F"Time taken: {toc - tic:0.5f} seconds.")
         print()
