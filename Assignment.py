@@ -1,6 +1,8 @@
 import copy
 import itertools
 
+import time
+
 
 class CSP:
     def __init__(self):
@@ -178,8 +180,9 @@ class CSP:
         the lists of legal values for each undecided variable. 'queue'
         is the initial queue of arcs that should be visited.
         """
-        while len(queue) > 0:
-            (xi, xj) = queue.pop(0) # pair is a tuple. Example: ('0-0', '0-1')
+        queue_set = set(queue)
+        while len(queue_set) > 0:
+            (xi, xj) = queue_set.pop() # pair is a tuple. Example: ('0-0', '0-1')
 
             if self.revise(assignment, xi, xj):
                 # If this is true, then the domain of xi has been revised
@@ -187,7 +190,7 @@ class CSP:
                     # if self.domains[xi] is empty, then the CSP has no solution
                     return False
                 for neighbor_tuple in self.get_all_neighboring_arcs(xi):
-                    queue.append(neighbor_tuple)
+                    queue_set.add(neighbor_tuple)
         return True
 
 
@@ -278,8 +281,13 @@ if __name__ == "__main__":
     for task in ["easy", "medium", "hard", "veryhard"]:
         print(F"====== {task.upper():^7} ======")
         csp = create_sudoku_csp(F"{task}.txt")
+
+        tic = time.perf_counter()
         print_sudoku_solution(csp.backtracking_search())
+        toc = time.perf_counter()
+
         print()
+
         if csp.backtrack_called == 1:
             print(F"Backtrack called 1 time.")
         else:
@@ -289,4 +297,6 @@ if __name__ == "__main__":
             print(F"Backtrack failed 1 time.")
         else:
             print(F"Backtrack failed {csp.backtrack_failed} times.")
+            
+        print(F"Time taken: {toc - tic:0.5f} seconds.")
         print()
